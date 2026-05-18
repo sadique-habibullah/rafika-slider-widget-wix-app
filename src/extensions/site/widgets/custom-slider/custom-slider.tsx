@@ -243,7 +243,7 @@ const CustomElement: React.FC<Props> = ({
 
           width: 100%;
 
-          height: max-content;
+          height: 100%;
 
           display: flex;
 
