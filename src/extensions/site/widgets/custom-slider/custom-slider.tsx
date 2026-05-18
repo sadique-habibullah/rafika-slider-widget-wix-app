@@ -173,7 +173,7 @@ const CustomElement: React.FC<Props> = ({
   const goToSlide = (slideIndex: number) => {
     setIndex(slideIndex + 1);
   };
-  console.log("hey..");
+  console.log("hey...");
   return (
     <>
       <style>{`
