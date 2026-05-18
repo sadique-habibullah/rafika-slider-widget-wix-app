@@ -213,8 +213,7 @@ const CustomElement: React.FC<Props> = ({
                 ? "transform 0.7s cubic-bezier(0.65,0,0.35,1)"
                 : "none"
             };
-          /* the line below make break the style (sadique) */
-          
+          /* the line below may make break the style (sadique) */
         }
 
         /* -------------------------------- */
@@ -224,7 +223,7 @@ const CustomElement: React.FC<Props> = ({
         .slide {
 
           min-width: 100%;
-          height: max-content;
+          height: 100%;
 
           display: flex;
 
