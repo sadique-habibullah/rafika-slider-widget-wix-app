@@ -1192,12 +1192,134 @@
 //     </div>
 //   );
 // }
+
+// import React, { useState } from "react";
+// import { widget } from "@wix/editor";
+
+// interface Slide {
+//   image: string;
+//   title: string;
+//   description: string;
+//   buttonText: string;
+//   buttonUrl: string;
+//   price?: string;
+// }
+
+// const emptySlide = (): Slide => ({
+//   image: "",
+//   title: "",
+//   description: "",
+//   buttonText: "Book Now",
+//   buttonUrl: "#",
+//   price: "",
+// });
+
+// const inputStyle: React.CSSProperties = {
+//   width: "100%",
+//   padding: "6px 8px",
+//   borderRadius: "6px",
+//   border: "1px solid #ddd",
+//   fontSize: "12px",
+//   marginBottom: "6px",
+//   boxSizing: "border-box",
+// };
+
+// export default function Panel() {
+//   const [slides, setSlides] = useState<Slide[]>([emptySlide()]);
+//   const [accentColor, setAccentColor] = useState("#7B3F2A");
+//   const [bgColor, setBgColor] = useState("#F5EBE4");
+//   const [buttonColor, setButtonColor] = useState("#C4973E");
+
+//   const addSlide = () => setSlides([...slides, emptySlide()]);
+
+//   const update = (i: number, key: keyof Slide, value: string) => {
+//     const copy = [...slides];
+//     copy[i] = { ...copy[i], [key]: value };
+//     setSlides(copy);
+//   };
+
+//   const apply = () => {
+//     widget.setProp("slides", JSON.stringify(slides));
+//     widget.setProp("accentColor", accentColor);
+//     widget.setProp("bgColor", bgColor);
+//     widget.setProp("buttonColor", buttonColor);
+//   };
+
+//   return (
+//     <div style={{ padding: "12px", fontFamily: "Arial" }}>
+//       <h3>Slides</h3>
+
+//       {slides.map((s, i) => (
+//         <div
+//           key={i}
+//           style={{
+//             border: "1px solid #eee",
+//             padding: "10px",
+//             marginBottom: "10px",
+//             borderRadius: "8px",
+//           }}
+//         >
+//           <input
+//             placeholder="Image"
+//             value={s.image}
+//             onChange={(e) => update(i, "image", e.target.value)}
+//             style={inputStyle}
+//           />
+
+//           <input
+//             placeholder="Title"
+//             value={s.title}
+//             onChange={(e) => update(i, "title", e.target.value)}
+//             style={inputStyle}
+//           />
+
+//           <input
+//             placeholder="Description"
+//             value={s.description}
+//             onChange={(e) => update(i, "description", e.target.value)}
+//             style={inputStyle}
+//           />
+
+//           {/* 🔥 PRICE FIX */}
+//           <input
+//             placeholder="Price (e.g. $99)"
+//             value={s.price || ""}
+//             onChange={(e) => update(i, "price", e.target.value)}
+//             style={inputStyle}
+//           />
+
+//           <input
+//             placeholder="Button Text"
+//             value={s.buttonText}
+//             onChange={(e) => update(i, "buttonText", e.target.value)}
+//             style={inputStyle}
+//           />
+
+//           <input
+//             placeholder="Button URL"
+//             value={s.buttonUrl}
+//             onChange={(e) => update(i, "buttonUrl", e.target.value)}
+//             style={inputStyle}
+//           />
+//         </div>
+//       ))}
+
+//       <button onClick={addSlide}>+ Add Slide</button>
+
+//       <button onClick={apply} style={{ marginTop: "10px" }}>
+//         Apply
+//       </button>
+//     </div>
+//   );
+// }
+
 import React, { useState } from "react";
 import { widget } from "@wix/editor";
 
 interface Slide {
-  image: string;
   title: string;
+  image: string;
+
   description: string;
   buttonText: string;
   buttonUrl: string;
@@ -1205,8 +1327,9 @@ interface Slide {
 }
 
 const emptySlide = (): Slide => ({
-  image: "",
   title: "",
+  image: "",
+
   description: "",
   buttonText: "Book Now",
   buttonUrl: "#",
