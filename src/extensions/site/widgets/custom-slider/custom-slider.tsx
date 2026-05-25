@@ -1,533 +1,291 @@
-import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom";
 import reactToWebComponent from "react-to-webcomponent";
-import { decode } from "html-entities";
+import ReactDOM from "react-dom";
+import React, { useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { A11y } from "swiper/modules";
+import "swiper/css";
 
-interface Slide {
-  title?: string;
-  image?: string;
-  description?: string;
-  buttonText?: string;
-  buttonUrl?: string;
-}
+const CSS = `
+  /* ── Outer wrapper — salmon/terracotta background ───────────────────── */
+  .rs2-outer {
+    font-family: Georgia, 'Times New Roman', serif;
+    box-sizing: border-box;
+    width: 100%;
+  }
 
-interface Props {
-  slides?: string;
-  accentColor?: string;
-  bgColor?: string;
-  buttonColor?: string;
-}
+  /* ── Swiper container — also acts as the card surface ───────────────── */
+  .rs2-swiper-wrap {
+    position: relative;
+    background-color: #F5EBE3;
+    border-radius: 14px;
+    max-width: 480px;
+    margin: 0 auto;
+    overflow: hidden;      /* clips sliding track; nav buttons sit inside */
+  }
 
-const CustomElement: React.FC<Props> = ({
-  slides,
-  accentColor = "#964D32",
-  bgColor = "#F8EFEA",
-  buttonColor = "#CFA360",
-}) => {
-  // -----------------------------------
-  // STATE
-  // -----------------------------------
+  /* Auto-height transition so the card resizes smoothly between slides */
+  .rs2-swiper-wrap .swiper-wrapper {
+    transition-property: transform, height;
+  }
 
-  const [data, setData] = useState<Slide[]>([]);
+  /* ── Slide content area ─────────────────────────────────────────────── */
+  .rs2-slide {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 68px;    /* side padding keeps content clear of nav arrows */
+    min-height: 440px;
+    gap: 24px;
+    box-sizing: border-box;
+  }
 
-  // IMPORTANT
-  // START FROM 1 FOR INFINITE SLIDER
-  const [index, setIndex] = useState(1);
+  /* ── Title ──────────────────────────────────────────────────────────── */
+  .rs2-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #7B3000;
+    line-height: 1.3;
+    margin: 0;
+    word-break: break-word;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
 
-  const [isTransitioning, setIsTransitioning] = useState(true);
+  /* ── Circular image ─────────────────────────────────────────────────── */
+  .rs2-img-wrap {
+    width: 170px;
+    height: 170px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
 
-  // -----------------------------------
-  // FIX WIX IMAGE URL
-  // -----------------------------------
-  // -----------------------------------
-  // FIX WIX IMAGE URL (Improved)
-  // -----------------------------------
-  // -----------------------------------
-  // IMPROVED FIX WIX IMAGE
-  // -----------------------------------
-  const fixImage = (image?: string) => {
-    if (!image) return "";
+  .rs2-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
 
-    // Wix protocol
-    if (image.startsWith("wix:image://")) {
-      const id = image.split("~")[0].replace("wix:image://v1/", "");
-      return `https://static.wixstatic.com/media/${id}`;
-    }
+  /* ── Rich-text description ──────────────────────────────────────────── */
+  .rs2-desc {
+    font-size: 15px;
+    color: #7B3000;
+    line-height: 1.85;
+    margin: 0;
+    max-width: 320px;
+    text-align: center;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
 
-    // Wix CDN safe
-    if (image.includes("static.wixstatic.com/media/")) {
-      return image;
-    }
+  /* Propagate font settings into all inner HTML nodes */
+  .rs2-desc * {
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+  }
 
-    // external safe check
-    try {
-      new URL(image);
-      return image;
-    } catch {
-      return "https://picsum.photos/300";
-    }
-  };
-  // -----------------------------------
-  // PARSE SLIDES
-  // -----------------------------------
+  .rs2-desc em,
+  .rs2-desc i       { font-style: italic; }
 
-  useEffect(() => {
-    if (!slides) {
-      setData([]);
+  .rs2-desc strong,
+  .rs2-desc b       { font-weight: 700; }
 
-      return;
-    }
+  .rs2-desc p       { margin: 0; }
+  .rs2-desc p + p   { margin-top: 0.9em; }
 
-    try {
-      const parsed = typeof slides === "string" ? JSON.parse(slides) : slides;
+  /* Lists render as a centered block with left-aligned item text */
+  .rs2-desc ul,
+  .rs2-desc ol {
+    display: inline-block;
+    text-align: left;
+    list-style: disc;
+    padding-left: 1.35em;
+    margin: 0;
+  }
 
-      if (Array.isArray(parsed)) {
-        const fixedSlides = parsed.map((slide) => ({
-          ...slide,
+  .rs2-desc ol       { list-style: decimal; }
+  .rs2-desc li       { margin-bottom: 5px; }
 
-          image: fixImage(slide.image),
-        }));
+  /* ── CTA button ─────────────────────────────────────────────────────── */
+  .rs2-btn {
+    display: block;
+    width: 100%;
+    max-width: 256px;
+    background-color: #C49640;
+    color: #ffffff;
+    border: none;
+    border-radius: 50px;
+    padding: 13px 20px;
+    font-size: 14.5px;
+    font-weight: 600;
+    font-family: Georgia, 'Times New Roman', serif;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: opacity 0.2s;
+    box-sizing: border-box;
+  }
 
-        setData(fixedSlides);
+  .rs2-btn:hover { opacity: 0.85; }
 
-        // RESET
-        setIndex(1);
-      }
-    } catch (err) {
-      console.log(err);
+  /* ── Navigation arrows ──────────────────────────────────────────────── */
+  .rs2-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    color: #7B3000;
+    padding: 8px 5px;
+    line-height: 1;
+    z-index: 10;
+    user-select: none;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
 
-      setData([]);
-    }
-  }, [slides]);
+  .rs2-nav--prev { left: 12px; }
+  .rs2-nav--next { right: 12px; }
+  .rs2-nav:hover { opacity: 0.55; }
 
-  // -----------------------------------
-  // CLONE SLIDES
-  // -----------------------------------
+  /* ── Tablet ─────────────────────────────────────────────────────────── */
+  @media (min-width: 600px) {
+    .rs2-outer         { padding: 48px 28px; }
+    .rs2-swiper-wrap   { max-width: 580px; }
+    .rs2-slide         { padding: 56px 80px; min-height: 480px; gap: 28px; }
+    .rs2-title         { font-size: 32px; }
+    .rs2-img-wrap      { width: 195px; height: 195px; }
+    .rs2-desc          { font-size: 16px; max-width: 370px; }
+    .rs2-btn           { max-width: 280px; font-size: 15px; padding: 14px 24px; }
+    .rs2-nav           { font-size: 26px; }
+    .rs2-nav--prev     { left: 14px; }
+    .rs2-nav--next     { right: 14px; }
+  }
 
-  const slidesWithClones =
-    data.length > 1 ? [data[data.length - 1], ...data, data[0]] : data;
+  /* ── Desktop ─────────────────────────────────────────────────────────── */
+  @media (min-width: 1024px) {
+    .rs2-outer         { padding: 56px 40px; }
+    .rs2-swiper-wrap   { max-width: 700px; }
+    .rs2-slide         { padding: 64px 96px; min-height: 520px; gap: 32px; }
+    .rs2-title         { font-size: 38px; }
+    .rs2-img-wrap      { width: 220px; height: 220px; }
+    .rs2-desc          { font-size: 17px; max-width: 440px; }
+    .rs2-btn           { max-width: 300px; font-size: 16px; padding: 15px 28px; }
+    .rs2-nav           { font-size: 30px; }
+    .rs2-nav--prev     { left: 18px; }
+    .rs2-nav--next     { right: 18px; }
+  }
 
-  // -----------------------------------
-  // NEXT
-  // -----------------------------------
+  /* ── Large desktop ───────────────────────────────────────────────────── */
+  @media (min-width: 1440px) {
+    .rs2-swiper-wrap   { max-width: 820px; }
+    .rs2-slide         { padding: 72px 112px; }
+    .rs2-title         { font-size: 44px; }
+    .rs2-img-wrap      { width: 250px; height: 250px; }
+    .rs2-desc          { font-size: 18px; max-width: 520px; }
+  }
+`;
 
-  const goNext = () => {
-    if (!data.length) return;
+const SwiperSlider = ({ slides = "" }) => {
+  console.log("prop slides: ", slides);
 
-    setIndex((prev) => prev + 1);
-  };
+  const [swiper, setSwiper] = useState(null);
 
-  // -----------------------------------
-  // PREV
-  // -----------------------------------
+  slides = JSON.parse(slides);
+  console.log("prop slides parsed: ", slides);
 
-  const goPrev = () => {
-    if (!data.length) return;
+  if (!slides.length) return null;
 
-    setIndex((prev) => prev - 1);
-  };
-
-  // -----------------------------------
-  // INFINITE LOOP FIX
-  // -----------------------------------
-
-  useEffect(() => {
-    if (data.length <= 1) return;
-
-    // LAST CLONE
-    if (index === slidesWithClones.length - 1) {
-      setTimeout(() => {
-        setIsTransitioning(false);
-
-        setIndex(1);
-      }, 700);
-    }
-
-    // FIRST CLONE
-    if (index === 0) {
-      setTimeout(() => {
-        setIsTransitioning(false);
-
-        setIndex(data.length);
-      }, 700);
-    }
-  }, [index]);
-
-  // -----------------------------------
-  // RE-ENABLE TRANSITION
-  // -----------------------------------
-
-  useEffect(() => {
-    if (!isTransitioning) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsTransitioning(true);
-        });
-      });
-    }
-  }, [isTransitioning]);
-
-  // -----------------------------------
-  // DOT CLICK
-  // -----------------------------------
-
-  const goToSlide = (slideIndex: number) => {
-    setIndex(slideIndex + 1);
-  };
+  const hasMultiple = slides.length > 1;
 
   return (
     <>
-      <style>{`
-
-        :host {
-          display: block;
-          width: 100%;
-          height: 100%;
-          font-family: Arial, sans-serif;
-        }
-
-        .wrapper {
-          width: 450px;
-          height: 540px;
-          overflow: hidden;
-          position: relative;
-          background: ${bgColor};
-        }
-
-        /* -------------------------------- */
-        /* SLIDER TRACK */
-        /* -------------------------------- */
-
-        .slider {
-
-          display: flex;
-
-          width: 100%;
-          height: 100%;
-
-          transform:
-            translateX(-${index * 100}%);
-
-          transition:
-            ${
-              isTransitioning
-                ? "transform 0.7s cubic-bezier(0.65,0,0.35,1)"
-                : "none"
-            };
-        }
-
-        /* -------------------------------- */
-        /* SINGLE SLIDE */
-        /* -------------------------------- */
-
-        .slide {
-
-          min-width: 100%;
-          height: 100%;
-
-          display: flex;
-
-          justify-content: center;
-          align-items: center;
-
-          padding: 40px;
-
-          box-sizing: border-box;
-        }
-
-        /* -------------------------------- */
-        /* CARD */
-        /* -------------------------------- */
-
-        .card {
-
-          width: 420px;
-
-          display: flex;
-
-          flex-direction: column;
-
-          align-items: center;
-
-          text-align: center;
-        }
-
-        .title {
-
-        font-family:neue-haas-grotesk-display-pro, sans-serif;;
-      // font-style: italic;
-          font-size: 30px;
-line-height:36px;
-font-weight: bold;
-          font-hieght: 36px;
-
-          color: ${accentColor};
-
-          margin-bottom: 28px;
-        }
- .image {
-          width: 178px;
-          height: 178px;
-          border-radius: 50%;
-          object-fit: cover;
-          margin-bottom: 28px;
-          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-        }
-       .desc {
-  font-size: 18px;
-  font-family: Arial, sans-serif;
-  font-style: italic;
-  line-height: 22px;
-  color: ${accentColor};
-  margin-bottom: 34px;
-  max-width: 320px;
-
-  white-space:  pre-wrap;
-}
-
-        .btn {
-
-          // padding: 14px 34px;
-
-          border: none;
-width:212px;
-height:40px;
-font-size: 16px;
-
- 
-font-family:Arial, sans-serif;
-
-          border-radius: 50px;
-
-          background: ${buttonColor};
-
-          color: white;
-
-          cursor: pointer;
-
-
-
-          transition: 0.3s ease;
-        }
-
-
-        .btn:hover {
-border:1px solid ;
-border-color: ${buttonColor};
-width:212px;
-height:40px;
-font-size: 16px;
-
-font-family:Arial, sans-serif;
-   background: ${bgColor};
-          border-radius: 50px;
-           color: ${buttonColor};
-
-        }
-
-        /* -------------------------------- */
-        /* NAV BUTTON */
-        /* -------------------------------- */
-
-//         .nav {
-//   position: absolute;
-//   top: 50%;
-//   transform: translateY(-50%);
-
-//   width: 48px;
-//   height: 48px;
-
-//   border: none;
-
-//   background: ${bgColor};
-
-//   // backdrop-filter: blur(10px);
-// font-weight:Light;
-//   cursor: pointer;
-
-//   font-size: 40px;  
-
-//   z-index: 10;
-
-//   transition: 0.3s ease;
-// }
-
-.nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-
-  width: 48px;
-  height: 48px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border: none;
-
-  background: transparent;
-
-  cursor: pointer;
-
-  font-size: 40px;    
-
-  font-weight: 100;  
-
-  line-height: 1;
-
-  z-index: 10;
-
-  transition: 0.3s ease;
-}
-
-       .nav:hover {
-  transform:
-    translateY(-50%)
-    // scale(1.08);
-}
-
-        .left {
-
-          left: 10px;
-        }
-
-        .right {
-
-          right: 10px;
-        }
-
-        /* -------------------------------- */
-        /* DOTS */
-        /* -------------------------------- */
-
-        .dots {
-          position: absolute;
-          bottom: 20px;
-          left: 50%;
-          transform:
-          translateX(-50%);
-          display: flex;
-          gap: 10px;
-        }
-
-        .dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-          background: #ccc;
-          cursor: pointer;
-          transition: 0.3s ease;
-        }
-
-        .dot.active {
-          background: ${accentColor};
-          transform: scale(1.3);
-        }
-
-        /* Mobile only */
-        @media screen and (max-width: 768px) {
-          .wrapper {
-            width: 100%;
-            height: 650px;
-          }
-        }
-
-      `}</style>
-
-      <div className="wrapper">
-        {/* -------------------------------- */}
-        {/* SLIDER */}
-        {/* -------------------------------- */}
-
-        <div className="slider">
-          {slidesWithClones.map((slide, i) => {
-            return (
-              <div className="slide" key={i}>
-                <div className="card">
-                  {slide?.title && <div className="title">{slide?.title}</div>}
-
-                  {slide?.image && (
-                    <img
-                      src={slide?.image}
-                      className="image"
-                      alt={slide?.title}
-                    />
+      <style>{CSS}</style>
+
+      <div className="rs2-outer">
+        <div className="rs2-swiper-wrap">
+          <Swiper
+            modules={[A11y]}
+            onSwiper={setSwiper}
+            slidesPerView={1}
+            loop={hasMultiple}
+            autoHeight
+            a11y={{
+              prevSlideMessage: "Previous slide",
+              nextSlideMessage: "Next slide",
+            }}
+          >
+            {slides.map((slide, i) => (
+              <SwiperSlide key={slide.id ?? i}>
+                <div className="rs2-slide">
+                  {slide.title && <h2 className="rs2-title">{slide.title}</h2>}
+
+                  {slide.image && (
+                    <div className="rs2-img-wrap">
+                      <img
+                        src={slide.image}
+                        alt={slide.title || `Slide ${i + 1}`}
+                        className="rs2-img"
+                      />
+                    </div>
                   )}
 
-                  {slide?.description && (
+                  {slide.description && (
                     <div
-                      className="desc"
-                      dangerouslySetInnerHTML={{
-                        __html: decode(slide.description),
-                      }}
+                      className="rs2-desc"
+                      dangerouslySetInnerHTML={{ __html: slide.description }}
                     />
                   )}
 
-                  {slide?.buttonText && (
-                    <button
-                      className="btn"
-                      onClick={() =>
-                        slide?.buttonUrl &&
-                        window.open(slide?.buttonUrl, "_blank")
-                      }
-                    >
-                      {slide?.buttonText}
-                    </button>
-                  )}
+                  {slide.button &&
+                    (slide.button.url ? (
+                      <a href={slide.button.url} className="rs2-btn">
+                        {slide.button.label}
+                      </a>
+                    ) : (
+                      <button
+                        className="rs2-btn"
+                        onClick={slide.button.onClick}
+                      >
+                        {slide.button.label}
+                      </button>
+                    ))}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* -------------------------------- */}
-        {/* NAVIGATION */}
-        {/* -------------------------------- */}
-
-        {data.length > 1 && (
-          <>
-            <button className="nav left" onClick={goPrev}>
-              ‹
-            </button>
-
-            <button className="nav right" onClick={goNext}>
-              ›
-            </button>
-          </>
-        )}
-
-        {/* -------------------------------- */}
-        {/* DOTS */}
-        {/* -------------------------------- */}
-
-        {data.length > 1 && (
-          <div className="dots">
-            {data.map((_, i) => (
-              <div
-                key={i}
-                className={`dot ${
-                  i + 1 === index || (index === data.length + 1 && i === 0)
-                    ? "active"
-                    : ""
-                }`}
-                onClick={() => goToSlide(i)}
-              />
+              </SwiperSlide>
             ))}
-          </div>
-        )}
+          </Swiper>
+
+          {hasMultiple && (
+            <>
+              <button
+                className="rs2-nav rs2-nav--prev"
+                onClick={() => swiper?.slidePrev()}
+                aria-label="Previous slide"
+              >
+                &#8249;
+              </button>
+              <button
+                className="rs2-nav rs2-nav--next"
+                onClick={() => swiper?.slideNext()}
+                aria-label="Next slide"
+              >
+                &#8250;
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </>
   );
 };
 
-export default reactToWebComponent(CustomElement, React, ReactDOM, {
+export default reactToWebComponent(SwiperSlider, React, ReactDOM, {
   shadow: "open",
-
   props: {
     slides: "string",
-    accentColor: "string",
-    bgColor: "string",
-    buttonColor: "string",
   },
 });

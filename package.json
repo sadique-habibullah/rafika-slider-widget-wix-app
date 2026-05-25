@@ -19,9 +19,9 @@
     "@wix/editor": "^1.0.0",
     "@wix/wix-ui-icons-common": "^3.0.0",
     "astro": "^5.8.0",
-    "html-entities": "^2.6.0",
     "react-to-webcomponent": "^2.0.0",
     "recharts": "^2.0.0",
+    "swiper": "^12.1.4",
     "typescript": "^5.8.3"
   },
   "devDependencies": {
