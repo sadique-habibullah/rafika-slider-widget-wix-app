@@ -1,321 +1,289 @@
 import reactToWebComponent from "react-to-webcomponent";
 import ReactDOM from "react-dom";
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { A11y } from "swiper/modules";
+import "swiper/css";
 
 const CSS = `
-  .rs-slider {
-    position: relative;
-    background-color: #F5E4D8;
-    border-radius: 10px;
-    padding: 44px 52px 36px;
+  /* ── Outer wrapper — salmon/terracotta background ───────────────────── */
+  .rs2-outer {
     font-family: Georgia, 'Times New Roman', serif;
+    box-sizing: border-box;
     width: 100%;
+  }
+
+  /* ── Swiper container — also acts as the card surface ───────────────── */
+  .rs2-swiper-wrap {
+    position: relative;
+    background-color: #F5EBE3;
+    border-radius: 14px;
     max-width: 480px;
     margin: 0 auto;
-    box-sizing: border-box;
+    overflow: hidden;      /* clips sliding track; nav buttons sit inside */
   }
 
-  .rs-slider__viewport {
-    overflow: hidden;
-    width: 100%;
+  /* Auto-height transition so the card resizes smoothly between slides */
+  .rs2-swiper-wrap .swiper-wrapper {
+    transition-property: transform, height;
   }
 
-  .rs-slider__track {
-    display: flex;
-    align-items: stretch;
-    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: transform;
-  }
-
-  .rs-slider__slide {
-    min-width: 100%;
+  /* ── Slide content area ─────────────────────────────────────────────── */
+  .rs2-slide {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    gap: 26px;
+    padding: 48px 68px;    /* side padding keeps content clear of nav arrows */
+    min-height: 440px;
+    gap: 24px;
     box-sizing: border-box;
-    padding: 8px 0;
   }
 
-  .rs-slider__title {
+  /* ── Title ──────────────────────────────────────────────────────────── */
+  .rs2-title {
     font-size: 28px;
     font-weight: 700;
-    color: #7B3100;
-    line-height: 1.35;
+    color: #7B3000;
+    line-height: 1.3;
     margin: 0;
-    font-family: Georgia, 'Times New Roman', serif;
     word-break: break-word;
+    font-family: Georgia, 'Times New Roman', serif;
   }
 
-  .rs-slider__img-wrap {
-    width: 190px;
-    height: 190px;
+  /* ── Circular image ─────────────────────────────────────────────────── */
+  .rs2-img-wrap {
+    width: 170px;
+    height: 170px;
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
   }
 
-  .rs-slider__img {
+  .rs2-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
   }
 
-  .rs-slider__desc {
-    font-size: 15.5px;
-    color: #7B3100;
-    font-style: italic;
-    line-height: 1.8;
+  /* ── Rich-text description ──────────────────────────────────────────── */
+  .rs2-desc {
+    font-size: 15px;
+    color: #7B3000;
+    line-height: 1.85;
     margin: 0;
-    font-family: Georgia, 'Times New Roman', serif;
-    max-width: 340px;
+    max-width: 320px;
     text-align: center;
+    font-family: Georgia, 'Times New Roman', serif;
   }
 
-  .rs-slider__desc * {
-    margin: 0;
-    padding: 0;
-    font-style: italic;
+  /* Propagate font settings into all inner HTML nodes */
+  .rs2-desc * {
     color: inherit;
     font-family: inherit;
     font-size: inherit;
     line-height: inherit;
   }
 
-  .rs-slider__desc p + p {
-    margin-top: 0.5em;
+  .rs2-desc em,
+  .rs2-desc i       { font-style: italic; }
+
+  .rs2-desc strong,
+  .rs2-desc b       { font-weight: 700; }
+
+  .rs2-desc p       { margin: 0; }
+  .rs2-desc p + p   { margin-top: 0.9em; }
+
+  /* Lists render as a centered block with left-aligned item text */
+  .rs2-desc ul,
+  .rs2-desc ol {
+    display: inline-block;
+    text-align: left;
+    list-style: disc;
+    padding-left: 1.35em;
+    margin: 0;
   }
 
-  .rs-slider__btn {
-    display: inline-block;
-    border: 1.5px solid #C4A870;
+  .rs2-desc ol       { list-style: decimal; }
+  .rs2-desc li       { margin-bottom: 5px; }
+
+  /* ── CTA button ─────────────────────────────────────────────────────── */
+  .rs2-btn {
+    display: block;
+    width: 100%;
+    max-width: 256px;
+    background-color: #C49640;
+    color: #ffffff;
+    border: none;
     border-radius: 50px;
-    background: transparent;
-    color: #C4A870;
-    padding: 12px 62px;
+    padding: 13px 20px;
     font-size: 14.5px;
+    font-weight: 600;
     font-family: Georgia, 'Times New Roman', serif;
     cursor: pointer;
-    letter-spacing: 0.3px;
     text-decoration: none;
-    transition: background-color 0.2s;
-    white-space: nowrap;
+    text-align: center;
+    transition: opacity 0.2s;
+    box-sizing: border-box;
   }
 
-  .rs-slider__btn:hover {
-    background-color: rgba(196, 168, 112, 0.1);
-  }
+  .rs2-btn:hover { opacity: 0.85; }
 
-  .rs-slider__nav {
+  /* ── Navigation arrows ──────────────────────────────────────────────── */
+  .rs2-nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 28px;
-    color: #5A2800;
-    padding: 6px 4px;
+    font-size: 22px;
+    color: #7B3000;
+    padding: 8px 5px;
     line-height: 1;
     z-index: 10;
     user-select: none;
     font-family: Georgia, 'Times New Roman', serif;
   }
 
-  .rs-slider__nav--prev { left: 14px; }
-  .rs-slider__nav--next { right: 14px; }
-  .rs-slider__nav:hover { opacity: 0.6; }
+  .rs2-nav--prev { left: 12px; }
+  .rs2-nav--next { right: 12px; }
+  .rs2-nav:hover { opacity: 0.55; }
 
-  .rs-slider__dots {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 28px;
-  }
-
-  .rs-slider__dot {
-    width: 11px;
-    height: 11px;
-    border-radius: 50%;
-    background-color: #D4C2B8;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    transition: background-color 0.25s;
-    flex-shrink: 0;
-  }
-
-  .rs-slider__dot--active {
-    background-color: #C4783A;
-  }
-
-  /* ── Tablet ── */
+  /* ── Tablet ─────────────────────────────────────────────────────────── */
   @media (min-width: 600px) {
-    .rs-slider {
-      max-width: 560px;
-      padding: 50px 64px 40px;
-    }
-
-    .rs-slider__title { font-size: 32px; }
-    .rs-slider__img-wrap { width: 210px; height: 210px; }
-    .rs-slider__desc { font-size: 16px; max-width: 380px; }
-    .rs-slider__btn { font-size: 15px; padding: 13px 68px; }
-    .rs-slider__nav { font-size: 32px; }
-    .rs-slider__nav--prev { left: 16px; }
-    .rs-slider__nav--next { right: 16px; }
+    .rs2-outer         { padding: 48px 28px; }
+    .rs2-swiper-wrap   { max-width: 580px; }
+    .rs2-slide         { padding: 56px 80px; min-height: 480px; gap: 28px; }
+    .rs2-title         { font-size: 32px; }
+    .rs2-img-wrap      { width: 195px; height: 195px; }
+    .rs2-desc          { font-size: 16px; max-width: 370px; }
+    .rs2-btn           { max-width: 280px; font-size: 15px; padding: 14px 24px; }
+    .rs2-nav           { font-size: 26px; }
+    .rs2-nav--prev     { left: 14px; }
+    .rs2-nav--next     { right: 14px; }
   }
 
-  /* ── Desktop ── */
-  @media (min-width: 900px) {
-    .rs-slider {
-      max-width: 720px;
-      padding: 60px 88px 48px;
-    }
-
-    .rs-slider__title { font-size: 38px; }
-    .rs-slider__img-wrap { width: 240px; height: 240px; }
-    .rs-slider__desc { font-size: 17px; max-width: 480px; }
-    .rs-slider__btn { font-size: 16px; padding: 14px 72px; }
-    .rs-slider__nav { font-size: 36px; }
-    .rs-slider__nav--prev { left: 20px; }
-    .rs-slider__nav--next { right: 20px; }
-    .rs-slider__dots { margin-top: 36px; }
-    .rs-slider__dot { width: 12px; height: 12px; }
+  /* ── Desktop ─────────────────────────────────────────────────────────── */
+  @media (min-width: 1024px) {
+    .rs2-outer         { padding: 56px 40px; }
+    .rs2-swiper-wrap   { max-width: 700px; }
+    .rs2-slide         { padding: 64px 96px; min-height: 520px; gap: 32px; }
+    .rs2-title         { font-size: 38px; }
+    .rs2-img-wrap      { width: 220px; height: 220px; }
+    .rs2-desc          { font-size: 17px; max-width: 440px; }
+    .rs2-btn           { max-width: 300px; font-size: 16px; padding: 15px 28px; }
+    .rs2-nav           { font-size: 30px; }
+    .rs2-nav--prev     { left: 18px; }
+    .rs2-nav--next     { right: 18px; }
   }
 
-  /* ── Large Desktop ── */
-  @media (min-width: 1280px) {
-    .rs-slider {
-      max-width: 900px;
-      padding: 72px 104px 56px;
-    }
-
-    .rs-slider__title { font-size: 44px; }
-    .rs-slider__img-wrap { width: 280px; height: 280px; }
-    .rs-slider__desc { font-size: 18px; max-width: 580px; }
+  /* ── Large desktop ───────────────────────────────────────────────────── */
+  @media (min-width: 1440px) {
+    .rs2-swiper-wrap   { max-width: 820px; }
+    .rs2-slide         { padding: 72px 112px; }
+    .rs2-title         { font-size: 44px; }
+    .rs2-img-wrap      { width: 250px; height: 250px; }
+    .rs2-desc          { font-size: 18px; max-width: 520px; }
   }
 `;
 
-const Slider = ({ slides = "" }) => {
-  console.log("slides:", slides);
+const SwiperSlider = ({ slides = "" }) => {
+  console.log("prop slides: ", slides);
+
+  const [swiper, setSwiper] = useState(null);
 
   slides = JSON.parse(slides);
-
-  const [current, setCurrent] = useState(0);
-  const touchStartX = useRef(null);
+  console.log("prop slides parsed: ", slides);
 
   if (!slides.length) return null;
 
-  const total = slides.length;
-  const goToPrev = () => setCurrent((i) => (i === 0 ? total - 1 : i - 1));
-  const goToNext = () => setCurrent((i) => (i === total - 1 ? 0 : i + 1));
-
-  const onTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const onTouchEnd = (e) => {
-    if (touchStartX.current === null) return;
-    const dx = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(dx) > 40) dx > 0 ? goToNext() : goToPrev();
-    touchStartX.current = null;
-  };
-
-  const hasMultiple = total > 1;
+  const hasMultiple = slides.length > 1;
 
   return (
     <>
       <style>{CSS}</style>
-      <div className="rs-slider">
-        <div
-          className="rs-slider__viewport"
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-        >
-          <div
-            className="rs-slider__track"
-            style={{ transform: `translateX(-${current * 100}%)` }}
+
+      <div className="rs2-outer">
+        <div className="rs2-swiper-wrap">
+          <Swiper
+            modules={[A11y]}
+            onSwiper={setSwiper}
+            slidesPerView={1}
+            loop={hasMultiple}
+            autoHeight
+            a11y={{
+              prevSlideMessage: "Previous slide",
+              nextSlideMessage: "Next slide",
+            }}
           >
             {slides.map((slide, i) => (
-              <div key={slide.id ?? i} className="rs-slider__slide">
-                {slide.title && (
-                  <h2 className="rs-slider__title">{slide.title}</h2>
-                )}
+              <SwiperSlide key={slide.id ?? i}>
+                <div className="rs2-slide">
+                  {slide.title && <h2 className="rs2-title">{slide.title}</h2>}
 
-                {slide.image && (
-                  <div className="rs-slider__img-wrap">
-                    <img
-                      src={slide.image}
-                      alt={slide.title || `Slide ${i + 1}`}
-                      className="rs-slider__img"
+                  {slide.image && (
+                    <div className="rs2-img-wrap">
+                      <img
+                        src={slide.image}
+                        alt={slide.title || `Slide ${i + 1}`}
+                        className="rs2-img"
+                      />
+                    </div>
+                  )}
+
+                  {slide.description && (
+                    <div
+                      className="rs2-desc"
+                      dangerouslySetInnerHTML={{ __html: slide.description }}
                     />
-                  </div>
-                )}
+                  )}
 
-                {slide.description && (
-                  <div
-                    className="rs-slider__desc"
-                    dangerouslySetInnerHTML={{ __html: slide.description }}
-                  />
-                )}
-
-                {slide.button &&
-                  (slide.button.url ? (
-                    <a href={slide.button.url} className="rs-slider__btn">
-                      {slide.button.label}
-                    </a>
-                  ) : (
-                    <button
-                      className="rs-slider__btn"
-                      onClick={slide.button.onClick}
-                    >
-                      {slide.button.label}
-                    </button>
-                  ))}
-              </div>
+                  {slide.button &&
+                    (slide.button.url ? (
+                      <a href={slide.button.url} className="rs2-btn">
+                        {slide.button.label}
+                      </a>
+                    ) : (
+                      <button
+                        className="rs2-btn"
+                        onClick={slide.button.onClick}
+                      >
+                        {slide.button.label}
+                      </button>
+                    ))}
+                </div>
+              </SwiperSlide>
             ))}
-          </div>
-        </div>
+          </Swiper>
 
-        {hasMultiple && (
-          <>
-            <button
-              className="rs-slider__nav rs-slider__nav--prev"
-              onClick={goToPrev}
-              aria-label="Previous slide"
-            >
-              &#8249;
-            </button>
-            <button
-              className="rs-slider__nav rs-slider__nav--next"
-              onClick={goToNext}
-              aria-label="Next slide"
-            >
-              &#8250;
-            </button>
-            <div className="rs-slider__dots" role="tablist" aria-label="Slides">
-              {slides.map((_, i) => (
-                <button
-                  key={i}
-                  role="tab"
-                  aria-selected={i === current}
-                  aria-label={`Go to slide ${i + 1}`}
-                  className={`rs-slider__dot${i === current ? " rs-slider__dot--active" : ""}`}
-                  onClick={() => setCurrent(i)}
-                />
-              ))}
-            </div>
-          </>
-        )}
+          {hasMultiple && (
+            <>
+              <button
+                className="rs2-nav rs2-nav--prev"
+                onClick={() => swiper?.slidePrev()}
+                aria-label="Previous slide"
+              >
+                &#8249;
+              </button>
+              <button
+                className="rs2-nav rs2-nav--next"
+                onClick={() => swiper?.slideNext()}
+                aria-label="Next slide"
+              >
+                &#8250;
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </>
   );
 };
 
-export default reactToWebComponent(Slider, React, ReactDOM, {
+export default reactToWebComponent(SwiperSlider, React, ReactDOM, {
   shadow: "open",
   props: {
     slides: "string",
