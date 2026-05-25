@@ -1,248 +1,7 @@
-// import React, { useState, useEffect } from "react";
-// import ReactDOM from "react-dom";
-// import reactToWebComponent from "react-to-webcomponent";
-
-// interface Slide {
-//   image?: string;
-//   title?: string;
-//   description?: string;
-//   buttonText?: string;
-//   buttonUrl?: string;
-//   price?: string;
-// }
-
-// interface Props {
-//   slides?: string;
-//   accentColor?: string;
-//   bgColor?: string;
-//   buttonColor?: string;
-// }
-
-// const CustomElement: React.FC<Props> = ({
-//   slides,
-//   accentColor = "#7B3F2A",
-//   bgColor = "#F5EBE4",
-//   buttonColor = "#C4973E",
-// }) => {
-//   const [index, setIndex] = useState(0);
-//   const [data, setData] = useState<Slide[]>([]);
-
-//   useEffect(() => {
-//     try {
-//       const parsed = JSON.parse(slides || "[]");
-//       setData(Array.isArray(parsed) ? parsed : []);
-//       setIndex(0);
-//     } catch {
-//       setData([]);
-//     }
-//   }, [slides]);
-
-//   const go = (dir: "next" | "prev") => {
-//     setIndex((i) =>
-//       dir === "next"
-//         ? (i + 1) % data.length
-//         : (i - 1 + data.length) % data.length,
-//     );
-//   };
-
-//   return (
-//     <>
-//       {/* 🔥 FIX WIX HEIGHT */}
-//       <style>{`
-//         :host {
-//           display: block;
-//           height: 450px !important;
-//           max-height: 450px !important;
-//           overflow: hidden !important;
-//         }
-
-//         .track {
-//           display: flex;
-//           height: 100%;
-//           transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
-//           will-change: transform;
-//         }
-
-//         /* 🔥 GAP FIX HERE */
-//         .slide {
-//           min-width: calc(100% - 20px);
-//           margin: 0 10px; /* GAP BETWEEN CARDS */
-//           height: 420px;
-//           background: #fff;
-//           border-radius: 18px;
-//           box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-//           display: flex;
-//           flex-direction: column;
-//           justify-content: center;
-//           align-items: center;
-//           text-align: center;
-//           padding: 20px;
-//           box-sizing: border-box;
-//         }
-
-//         @media (max-width: 768px) {
-//           .title {
-//             font-size: 20px !important;
-//           }
-//         }
-
-//         @media (max-width: 480px) {
-//           .title {
-//             font-size: 18px !important;
-//           }
-//         }
-//       `}</style>
-
-//       {/* OUTER */}
-//       <div
-//         style={{
-//           width: "100%",
-//           height: "450px",
-//           background: bgColor,
-//           display: "flex",
-//           justifyContent: "center",
-//           alignItems: "center",
-//           overflow: "hidden",
-//         }}
-//       >
-//         {/* VIEWPORT */}
-//         <div
-//           style={{
-//             width: "100%",
-//             maxWidth: "380px",
-//             height: "450px",
-//             overflow: "hidden",
-//             position: "relative",
-//           }}
-//         >
-//           {/* TRACK */}
-//           <div
-//             className="track"
-//             style={{
-//               transform: `translateX(-${index * 100}%)`,
-//             }}
-//           >
-//             {data.map((s, i) => (
-//               <div className="slide" key={i}>
-//                 {/* TITLE */}
-//                 {s.title && (
-//                   <h2
-//                     className="title"
-//                     style={{
-//                       color: accentColor,
-//                       fontSize: "24px",
-//                       fontWeight: 700,
-//                     }}
-//                   >
-//                     {s.title}
-//                   </h2>
-//                 )}
-
-//                 {/* IMAGE */}
-//                 {s.image && (
-//                   <img
-//                     src={s.image}
-//                     style={{
-//                       width: "110px",
-//                       height: "110px",
-//                       borderRadius: "50%",
-//                       objectFit: "cover",
-//                       marginTop: "10px",
-//                     }}
-//                   />
-//                 )}
-
-//                 {/* DESCRIPTION */}
-//                 {s.description && (
-//                   <p style={{ fontSize: "13px", color: "#666" }}>
-//                     {s.description}
-//                   </p>
-//                 )}
-
-//                 {/* PRICE */}
-//                 {s.price && (
-//                   <div style={{ fontWeight: "bold", fontSize: "16px" }}>
-//                     {s.price}
-//                   </div>
-//                 )}
-
-//                 {/* BUTTON */}
-//                 {s.buttonText && (
-//                   <button
-//                     onClick={() =>
-//                       s.buttonUrl && window.open(s.buttonUrl, "_blank")
-//                     }
-//                     style={{
-//                       marginTop: "10px",
-//                       padding: "10px 20px",
-//                       borderRadius: "999px",
-//                       border: "none",
-//                       background: buttonColor,
-//                       color: "#fff",
-//                       cursor: "pointer",
-//                     }}
-//                   >
-//                     {s.buttonText}
-//                   </button>
-//                 )}
-//               </div>
-//             ))}
-//           </div>
-
-//           {/* NAV */}
-//           {data.length > 1 && (
-//             <>
-//               <button
-//                 onClick={() => go("prev")}
-//                 style={{
-//                   position: "absolute",
-//                   left: "10px",
-//                   top: "50%",
-//                   transform: "translateY(-50%)",
-//                   fontSize: "22px",
-//                   background: "transparent",
-//                   border: "none",
-//                   cursor: "pointer",
-//                 }}
-//               >
-//                 ‹
-//               </button>
-
-//               <button
-//                 onClick={() => go("next")}
-//                 style={{
-//                   position: "absolute",
-//                   right: "10px",
-//                   top: "50%",
-//                   transform: "translateY(-50%)",
-//                   fontSize: "22px",
-//                   background: "transparent",
-//                   border: "none",
-//                   cursor: "pointer",
-//                 }}
-//               >
-//                 ›
-//               </button>
-//             </>
-//           )}
-//         </div>
-//       </div>
-//     </>
-//   );
-// };
-
-// export default reactToWebComponent(CustomElement, React, ReactDOM as any, {
-//   props: {
-//     slides: "string",
-//     accentColor: "string",
-//     bgColor: "string",
-//     buttonColor: "string",
-//   },
-// });
-
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import reactToWebComponent from "react-to-webcomponent";
+import { decode } from "html-entities";
 
 interface Slide {
   title?: string;
@@ -607,7 +366,7 @@ font-family:Arial, sans-serif;
 
   border: none;
 
-  background: ${bgColor};
+  background: transparent;
 
   cursor: pointer;
 
@@ -643,40 +402,35 @@ font-family:Arial, sans-serif;
         /* -------------------------------- */
 
         .dots {
-
           position: absolute;
-
           bottom: 20px;
-
           left: 50%;
-
           transform:
-            translateX(-50%);
-
+          translateX(-50%);
           display: flex;
-
           gap: 10px;
         }
 
         .dot {
-
           width: 10px;
           height: 10px;
-
           border-radius: 50%;
-
           background: #ccc;
-
           cursor: pointer;
-
           transition: 0.3s ease;
         }
 
         .dot.active {
-
           background: ${accentColor};
-
           transform: scale(1.3);
+        }
+
+        /* Mobile only */
+        @media screen and (max-width: 768px) {
+          .wrapper {
+            width: 100%;
+            height: 650px;
+          }
         }
 
       `}</style>
@@ -687,37 +441,44 @@ font-family:Arial, sans-serif;
         {/* -------------------------------- */}
 
         <div className="slider">
-          {slidesWithClones.map((slide, i) => (
-            <div className="slide" key={i}>
-              <div className="card">
-                {slide?.title && <div className="title">{slide?.title}</div>}
+          {slidesWithClones.map((slide, i) => {
+            return (
+              <div className="slide" key={i}>
+                <div className="card">
+                  {slide?.title && <div className="title">{slide?.title}</div>}
 
-                {slide?.image && (
-                  <img
-                    src={slide?.image}
-                    className="image"
-                    alt={slide?.title}
-                  />
-                )}
+                  {slide?.image && (
+                    <img
+                      src={slide?.image}
+                      className="image"
+                      alt={slide?.title}
+                    />
+                  )}
 
-                {slide?.description && (
-                  <div className="desc">{slide?.description}</div>
-                )}
+                  {slide?.description && (
+                    <div
+                      className="desc"
+                      dangerouslySetInnerHTML={{
+                        __html: decode(slide.description),
+                      }}
+                    />
+                  )}
 
-                {slide?.buttonText && (
-                  <button
-                    className="btn"
-                    onClick={() =>
-                      slide?.buttonUrl &&
-                      window.open(slide?.buttonUrl, "_blank")
-                    }
-                  >
-                    {slide?.buttonText}
-                  </button>
-                )}
+                  {slide?.buttonText && (
+                    <button
+                      className="btn"
+                      onClick={() =>
+                        slide?.buttonUrl &&
+                        window.open(slide?.buttonUrl, "_blank")
+                      }
+                    >
+                      {slide?.buttonText}
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* -------------------------------- */}
